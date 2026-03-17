@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
@@ -74,6 +76,93 @@
         }
         .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
         .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Date range button active state */
+        .date-range-btn.active {
+            background: rgba(59, 130, 246, 0.15) !important;
+            color: #3b82f6 !important;
+            border-color: rgba(59, 130, 246, 0.3) !important;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+        }
+        .dark .date-range-btn.active {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #93c5fd !important;
+            border-color: rgba(59, 130, 246, 0.4) !important;
+        }
+
+        /* Flatpickr dark mode overrides */
+        .dark .flatpickr-calendar {
+            background: rgba(15, 23, 42, 0.95) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(12px);
+        }
+        .dark .flatpickr-months .flatpickr-month,
+        .dark .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .dark .flatpickr-weekdays,
+        .dark span.flatpickr-weekday {
+            background: transparent !important;
+            color: #94a3b8 !important;
+        }
+        .dark .flatpickr-current-month input.cur-year,
+        .dark .flatpickr-current-month .numInputWrapper span {
+            color: #e2e8f0 !important;
+        }
+        .dark .flatpickr-day {
+            color: #cbd5e1 !important;
+            border-radius: 8px !important;
+        }
+        .dark .flatpickr-day:hover {
+            background: rgba(59, 130, 246, 0.2) !important;
+            border-color: transparent !important;
+        }
+        .dark .flatpickr-day.selected,
+        .dark .flatpickr-day.startRange,
+        .dark .flatpickr-day.endRange {
+            background: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+            color: #fff !important;
+        }
+        .dark .flatpickr-day.inRange {
+            background: rgba(59, 130, 246, 0.15) !important;
+            border-color: transparent !important;
+            box-shadow: -5px 0 0 rgba(59, 130, 246, 0.15), 5px 0 0 rgba(59, 130, 246, 0.15) !important;
+        }
+        .dark .flatpickr-day.today {
+            border-color: #3b82f6 !important;
+        }
+        .dark .flatpickr-day.flatpickr-disabled,
+        .dark .flatpickr-day.prevMonthDay,
+        .dark .flatpickr-day.nextMonthDay {
+            color: #334155 !important;
+        }
+        .dark .flatpickr-months .flatpickr-prev-month svg,
+        .dark .flatpickr-months .flatpickr-next-month svg {
+            fill: #94a3b8 !important;
+        }
+        .dark .flatpickr-months .flatpickr-prev-month:hover svg,
+        .dark .flatpickr-months .flatpickr-next-month:hover svg {
+            fill: #e2e8f0 !important;
+        }
+        .flatpickr-calendar {
+            border-radius: 16px !important;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border-color: transparent !important;
+            box-shadow: -5px 0 0 rgba(59, 130, 246, 0.1), 5px 0 0 rgba(59, 130, 246, 0.1) !important;
+        }
+        .flatpickr-day {
+            border-radius: 8px !important;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans selection:bg-brand-500 selection:text-white">
@@ -213,16 +302,46 @@
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             <!-- Main Cost Chart -->
             <div class="lg:col-span-2 glass rounded-[2.5rem] p-8 reveal" style="transition-delay: 500ms">
-                <div class="flex items-center justify-between mb-8">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                     <div>
                         <h3 class="text-xl font-bold">Cost Distribution</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Timeline of API investment across your stack</p>
                     </div>
-                    <select class="glass bg-transparent px-4 py-2 rounded-xl text-xs font-bold border-black/10 dark:border-white/10 outline-none text-slate-700 dark:text-slate-300">
-                        <option>Last 30 Days</option>
-                        <option>Last 7 Days</option>
-                        <option>Custom Range</option>
-                    </select>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                        <!-- Quick Select Buttons -->
+                        <div class="flex gap-1.5">
+                            <button onclick="setDateRange(7)" data-days="7" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
+                                7D
+                            </button>
+                            <button onclick="setDateRange(14)" data-days="14" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
+                                14D
+                            </button>
+                            <button onclick="setDateRange(30)" data-days="30" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
+                                30D
+                            </button>
+                            <button onclick="setDateRange(90)" data-days="90" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
+                                90D
+                            </button>
+                        </div>
+                        <!-- Date Range Picker -->
+                        <div class="relative">
+                            <div class="glass flex items-center gap-2 px-4 py-2 rounded-xl border-black/10 dark:border-white/10 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-all" id="dateRangeDisplay" onclick="document.getElementById('dateRangeInput').click()">
+                                <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span id="dateRangeText" class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($stats['start_date'])->format('M d') }} — {{ \Carbon\Carbon::parse($stats['end_date'])->format('M d, Y') }}
+                                </span>
+                                <svg class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <input type="text" id="dateRangeInput" class="absolute opacity-0 w-0 h-0 pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+                <!-- Loading indicator -->
+                <div id="chartLoading" class="hidden absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[2.5rem] z-10 flex items-center justify-center">
+                    <div class="flex items-center gap-3 glass px-6 py-3 rounded-2xl">
+                        <svg class="animate-spin w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Updating charts...</span>
+                    </div>
                 </div>
                 <div class="h-[300px]">
                     <canvas id="costChart"></canvas>
@@ -235,11 +354,11 @@
                  <div class="h-[250px] flex items-center justify-center relative">
                     <canvas id="modelChart"></canvas>
                  </div>
-                 <div class="mt-8 space-y-3">
+                 <div class="mt-8 space-y-3" id="modelListContainer">
                     @foreach($stats['costs_by_model'] as $model)
                     <div class="flex items-center justify-between text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-lg">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full" style="background-color: {{ ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'][$loop->index % 5] }}"></span>
+                            <span class="w-2 h-2 rounded-full" style="background-color: {{ ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#a855f7', '#84cc16', '#f97316'][$loop->index % 10] }}"></span>
                             <span class="font-mono text-slate-600 dark:text-slate-400">{{ $model->model }}</span>
                         </div>
                         <span class="font-bold text-slate-900 dark:text-white">{{ $stats['currency_symbol'] }}{{ number_format($model->cost, 4) }}</span>
@@ -338,7 +457,7 @@
                 document.documentElement.classList.add('dark');
                 localStorage.theme = 'dark';
             }
-            window.location.reload(); // Reload to refresh chart colors easily
+            updateChartTheme();
         }
 
         // Reveal Animations
@@ -349,45 +468,61 @@
             });
         });
 
-        const isDark = document.documentElement.classList.contains('dark');
-        const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-        const textColor = isDark ? '#94a3b8' : '#64748b';
+        let isDark = document.documentElement.classList.contains('dark');
+        let gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+        let textColor = isDark ? '#94a3b8' : '#64748b';
+        const chartDataUrl = '{{ route("larai.chart-data") }}';
+        const modelColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#a855f7', '#84cc16', '#f97316'];
+
+        // Track current date range
+        let currentStartDate = '{{ $stats["start_date"] }}';
+        let currentEndDate = '{{ $stats["end_date"] }}';
 
         // Charts Configuration
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                    titleColor: isDark ? '#fff' : '#0f172a',
-                    bodyColor: '#3b82f6',
-                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                    borderWidth: 1,
-                    padding: 12,
-                    cornerRadius: 12
-                }
-            },
-            scales: {
-                y: {
-                    grid: { color: gridColor, drawBorder: false },
-                    ticks: { color: textColor, font: { size: 10, weight: '600' } }
+        function getChartOptions() {
+            const dark = document.documentElement.classList.contains('dark');
+            const grid = dark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            const text = dark ? '#94a3b8' : '#64748b';
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: dark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                        titleColor: dark ? '#fff' : '#0f172a',
+                        bodyColor: '#3b82f6',
+                        borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 12
+                    }
                 },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: textColor, font: { size: 10, weight: '600' } }
+                scales: {
+                    y: {
+                        grid: { color: grid, drawBorder: false },
+                        ticks: { color: text, font: { size: 10, weight: '600' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: text, font: { size: 10, weight: '600' } }
+                    }
                 }
-            }
-        };
+            };
+        }
+
+        const chartOptions = getChartOptions();
 
         // Cost Over Time Chart
         const costCtx = document.getElementById('costChart').getContext('2d');
-        const costGradient = costCtx.createLinearGradient(0, 0, 0, 300);
-        costGradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-        costGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        function createCostGradient() {
+            const g = costCtx.createLinearGradient(0, 0, 0, 300);
+            g.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+            g.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            return g;
+        }
 
-        new Chart(costCtx, {
+        let costChart = new Chart(costCtx, {
             type: 'line',
             data: {
                 labels: {!! json_encode($stats['costs_over_time']->pluck('date')) !!},
@@ -400,7 +535,7 @@
                     pointBorderColor: '#3b82f6',
                     pointBorderWidth: 2,
                     pointHoverRadius: 6,
-                    backgroundColor: costGradient,
+                    backgroundColor: createCostGradient(),
                     fill: true,
                     tension: 0.4
                 }]
@@ -410,13 +545,13 @@
 
         // Model Distribution Chart
         const modelCtx = document.getElementById('modelChart').getContext('2d');
-        new Chart(modelCtx, {
+        let modelChart = new Chart(modelCtx, {
             type: 'doughnut',
             data: {
                 labels: {!! json_encode($stats['costs_by_model']->pluck('model')) !!},
                 datasets: [{
                     data: {!! json_encode($stats['costs_by_model']->pluck('cost')) !!},
-                    backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'],
+                    backgroundColor: modelColors,
                     hoverOffset: 20,
                     borderWidth: 0,
                     borderRadius: 4
@@ -431,6 +566,150 @@
                 }
             }
         });
+
+        // Update charts when theme changes (no page reload)
+        function updateChartTheme() {
+            isDark = document.documentElement.classList.contains('dark');
+            gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            textColor = isDark ? '#94a3b8' : '#64748b';
+
+            const newOptions = getChartOptions();
+
+            // Update cost chart
+            costChart.options = { ...costChart.options, ...newOptions };
+            costChart.data.datasets[0].pointBackgroundColor = isDark ? '#020617' : '#fff';
+            costChart.data.datasets[0].backgroundColor = createCostGradient();
+            costChart.update('none');
+
+            // Update model chart (doughnut has no scales)
+            modelChart.options.plugins = newOptions.plugins;
+            modelChart.update('none');
+        }
+
+        // Initialize Flatpickr
+        const fp = flatpickr('#dateRangeInput', {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            maxDate: 'today',
+            defaultDate: [currentStartDate, currentEndDate],
+            showMonths: window.innerWidth >= 640 ? 2 : 1,
+            animate: true,
+            onChange: function(selectedDates) {
+                if (selectedDates.length === 2) {
+                    const start = selectedDates[0].toISOString().split('T')[0];
+                    const end = selectedDates[1].toISOString().split('T')[0];
+                    currentStartDate = start;
+                    currentEndDate = end;
+                    updateDateRangeText(start, end);
+                    highlightActiveDaysButton();
+                    fetchChartData(start, end);
+                }
+            }
+        });
+
+        // Highlight initial active button
+        highlightActiveDaysButton();
+
+        function setDateRange(days) {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(end.getDate() - (days - 1));
+
+            const startStr = start.toISOString().split('T')[0];
+            const endStr = end.toISOString().split('T')[0];
+
+            currentStartDate = startStr;
+            currentEndDate = endStr;
+
+            fp.setDate([start, end], true);
+            updateDateRangeText(startStr, endStr);
+            highlightActiveDaysButton();
+            fetchChartData(startStr, endStr);
+        }
+
+        function highlightActiveDaysButton() {
+            const btns = document.querySelectorAll('.date-range-btn');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(currentStartDate);
+            start.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((today - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            btns.forEach(btn => {
+                const days = parseInt(btn.dataset.days);
+                if (days === diffDays) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function updateDateRangeText(start, end) {
+            const startDate = new Date(start + 'T00:00:00');
+            const endDate = new Date(end + 'T00:00:00');
+            const opts = { month: 'short', day: 'numeric' };
+            const optsYear = { month: 'short', day: 'numeric', year: 'numeric' };
+            const el = document.getElementById('dateRangeText');
+            el.textContent = startDate.toLocaleDateString('en-US', opts) + ' — ' + endDate.toLocaleDateString('en-US', optsYear);
+        }
+
+        async function fetchChartData(startDate, endDate) {
+            const loading = document.getElementById('chartLoading');
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+
+            try {
+                const url = `${chartDataUrl}?start_date=${startDate}&end_date=${endDate}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                // Update Cost Chart
+                costChart.data.labels = data.costs_over_time.map(item => item.date);
+                costChart.data.datasets[0].data = data.costs_over_time.map(item => item.cost);
+                costChart.update('active');
+
+                // Update Model Chart
+                modelChart.data.labels = data.costs_by_model.map(item => item.model);
+                modelChart.data.datasets[0].data = data.costs_by_model.map(item => item.cost);
+                modelChart.data.datasets[0].backgroundColor = modelColors.slice(0, data.costs_by_model.length);
+                modelChart.update('active');
+
+                // Update Model List in sidebar
+                updateModelList(data.costs_by_model, data.currency_symbol);
+
+            } catch (error) {
+                console.error('Failed to fetch chart data:', error);
+            } finally {
+                loading.classList.add('hidden');
+                loading.classList.remove('flex');
+            }
+        }
+
+        function updateModelList(models, currencySymbol) {
+            const container = document.getElementById('modelListContainer');
+            if (!container) return;
+
+            if (models.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">No data for selected range</p>';
+                return;
+            }
+
+            container.innerHTML = models.map((model, index) => `
+                <div class="flex items-center justify-between text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-lg">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full" style="background-color: ${modelColors[index % modelColors.length]}"></span>
+                        <span class="font-mono text-slate-600 dark:text-slate-400">${model.model}</span>
+                    </div>
+                    <span class="font-bold text-slate-900 dark:text-white">${currencySymbol}${parseFloat(model.cost).toFixed(4)}</span>
+                </div>
+            `).join('');
+        }
     </script>
 </body>
 </html>

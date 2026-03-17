@@ -14,6 +14,7 @@ Route::prefix('larai-tracker')->middleware(['web'])->group(function () {
     // Protected routes
     Route::middleware('larai.auth')->group(function () {
         Route::get('/', [LaraiDashboardController::class, 'index'])->name('larai.dashboard');
+        Route::get('/chart-data', [LaraiDashboardController::class, 'chartData'])->name('larai.chart-data');
         Route::get('/logs', [LaraiDashboardController::class, 'logs'])->name('larai.logs');
         Route::get('/export/{format}', [LaraiDashboardController::class, 'export'])->name('larai.export');
         Route::get('/settings', [LaraiDashboardController::class, 'settings'])->name('larai.settings');

@@ -9,25 +9,59 @@ use Illuminate\Support\Facades\DB;
 
 class LaraiDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $endDate = $request->get('end_date', now()->toDateString());
+        $startDate = $request->get('start_date', now()->subDays(6)->toDateString());
+
         $stats = [
             'total_cost' => LaraiLog::sum('cost_usd'),
             'total_tokens' => LaraiLog::sum('total_tokens'),
             'today_cost' => LaraiLog::whereDate('created_at', today())->sum('cost_usd'),
             'recent_logs' => LaraiLog::latest()->limit(10)->get(),
             'costs_by_model' => LaraiLog::select('model', DB::raw('SUM(cost_usd) as cost'))
+                ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
                 ->groupBy('model')
                 ->get(),
             'costs_over_time' => LaraiLog::select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(cost_usd) as cost'))
+                ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
                 ->groupBy('date')
                 ->orderBy('date')
-                ->limit(30)
                 ->get(),
             'currency_symbol' => \Gometap\LaraiTracker\Models\LaraiSetting::get('currency_symbol', '$'),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
         ];
 
         return view('larai::dashboard', compact('stats'));
+    }
+
+    /**
+     * Return chart data as JSON for AJAX date range updates.
+     */
+    public function chartData(Request $request)
+    {
+        $endDate = $request->get('end_date', now()->toDateString());
+        $startDate = $request->get('start_date', now()->subDays(6)->toDateString());
+
+        $costsOverTime = LaraiLog::select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(cost_usd) as cost'))
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $costsByModel = LaraiLog::select('model', DB::raw('SUM(cost_usd) as cost'))
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->groupBy('model')
+            ->get();
+
+        $currencySymbol = \Gometap\LaraiTracker\Models\LaraiSetting::get('currency_symbol', '$');
+
+        return response()->json([
+            'costs_over_time' => $costsOverTime,
+            'costs_by_model' => $costsByModel,
+            'currency_symbol' => $currencySymbol,
+        ]);
     }
 
     public function logs(Request $request)

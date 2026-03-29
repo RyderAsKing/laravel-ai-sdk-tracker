@@ -3,612 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Larai Tracker | AI Performance Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Larai Tracker | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f4ff',
-                            100: '#e0e9ff',
-                            200: '#c0d2ff',
-                            300: '#a0bcff',
-                            400: '#7094ff',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        body { 
-            background-color: #f8fafc; 
-            color: #0f172a;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .dark body {
-            background-color: #020617; 
-            color: #f8fafc;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(215,98%,61%,0.07) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(263,70%,50%,0.07) 0px, transparent 50%);
-        }
-        .glass { 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .dark .glass { 
-            background: rgba(15, 23, 42, 0.6); 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-        .animate-subtle { animation: subtle-float 6s ease-in-out infinite; }
-        @keyframes subtle-float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-
-        /* Date range button active state */
-        .date-range-btn.active {
-            background: rgba(59, 130, 246, 0.15) !important;
-            color: #3b82f6 !important;
-            border-color: rgba(59, 130, 246, 0.3) !important;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
-        }
-        .dark .date-range-btn.active {
-            background: rgba(59, 130, 246, 0.2) !important;
-            color: #93c5fd !important;
-            border-color: rgba(59, 130, 246, 0.4) !important;
-        }
-
-        /* Flatpickr dark mode overrides */
-        .dark .flatpickr-calendar {
-            background: rgba(15, 23, 42, 0.95) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-            backdrop-filter: blur(12px);
-        }
-        .dark .flatpickr-months .flatpickr-month,
-        .dark .flatpickr-current-month .flatpickr-monthDropdown-months,
-        .dark .flatpickr-weekdays,
-        .dark span.flatpickr-weekday {
-            background: transparent !important;
-            color: #94a3b8 !important;
-        }
-        .dark .flatpickr-current-month input.cur-year,
-        .dark .flatpickr-current-month .numInputWrapper span {
-            color: #e2e8f0 !important;
-        }
-        .dark .flatpickr-day {
-            color: #cbd5e1 !important;
-            border-radius: 8px !important;
-        }
-        .dark .flatpickr-day:hover {
-            background: rgba(59, 130, 246, 0.2) !important;
-            border-color: transparent !important;
-        }
-        .dark .flatpickr-day.selected,
-        .dark .flatpickr-day.startRange,
-        .dark .flatpickr-day.endRange {
-            background: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-            color: #fff !important;
-        }
-        .dark .flatpickr-day.inRange {
-            background: rgba(59, 130, 246, 0.15) !important;
-            border-color: transparent !important;
-            box-shadow: -5px 0 0 rgba(59, 130, 246, 0.15), 5px 0 0 rgba(59, 130, 246, 0.15) !important;
-        }
-        .dark .flatpickr-day.today {
-            border-color: #3b82f6 !important;
-        }
-        .dark .flatpickr-day.flatpickr-disabled,
-        .dark .flatpickr-day.prevMonthDay,
-        .dark .flatpickr-day.nextMonthDay {
-            color: #334155 !important;
-        }
-        .dark .flatpickr-months .flatpickr-prev-month svg,
-        .dark .flatpickr-months .flatpickr-next-month svg {
-            fill: #94a3b8 !important;
-        }
-        .dark .flatpickr-months .flatpickr-prev-month:hover svg,
-        .dark .flatpickr-months .flatpickr-next-month:hover svg {
-            fill: #e2e8f0 !important;
-        }
-        .flatpickr-calendar {
-            border-radius: 16px !important;
-            overflow: hidden;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-        }
-        .flatpickr-day.selected,
-        .flatpickr-day.startRange,
-        .flatpickr-day.endRange {
-            background: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-        }
-        .flatpickr-day.inRange {
-            background: rgba(59, 130, 246, 0.1) !important;
-            border-color: transparent !important;
-            box-shadow: -5px 0 0 rgba(59, 130, 246, 0.1), 5px 0 0 rgba(59, 130, 246, 0.1) !important;
-        }
-        .flatpickr-day {
-            border-radius: 8px !important;
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
         }
     </style>
 </head>
-<body class="min-h-screen font-sans selection:bg-brand-500 selection:text-white">
-    <!-- Navbar -->
-    <nav class="sticky top-0 z-50 px-6 py-4 glass mb-8 border-b border-black/5 dark:border-white/5">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+<body class="bg-slate-50 text-slate-900">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-brand-500/20">
-                    <img src="https://doq9otz3zrcmp.cloudfront.net/blogs/1_1771417079_rJ7ATPHw.png" alt="Larai Tracker" class="w-full h-full object-cover">
-                </div>
+                <img src="https://doq9otz3zrcmp.cloudfront.net/blogs/1_1771417079_rJ7ATPHw.png" alt="Larai Tracker" class="h-8 w-8 border border-slate-300 object-cover">
                 <div>
-                    <span class="text-xl font-extrabold tracking-tight">Larai<span class="text-brand-500">Tracker</span></span>
-                    <span class="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">Analytics Tool</span>
+                    <p class="text-sm font-semibold">Larai Tracker</p>
+                    <p class="text-xs text-slate-500">AI Usage Dashboard</p>
                 </div>
             </div>
-            <div class="flex items-center gap-6 text-sm font-medium">
-                 <a href="https://github.com/gometap/larai-tracker" class="text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white transition-colors cursor-pointer">Github</a>
-                 <a href="https://github.com/gometap/larai-tracker/blob/main/CHANGELOG.md" class="text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white transition-colors cursor-pointer">Changelog</a>
-                
-                <!-- Settings & Theme -->
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('larai.settings') }}" class="w-10 h-10 glass rounded-xl flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 transition-all text-slate-500 dark:text-slate-400 group" title="Configuration">
-                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </a>
-                    <button onclick="toggleTheme()" class="w-10 h-10 glass rounded-xl flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 transition-all text-slate-500 dark:text-slate-400">
-                        <svg id="theme-icon-dark" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1m-16 0h-1m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.071 16.071l.707.707M7.929 7.929l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
-                        <svg id="theme-icon-light" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                    </button>
-                </div>
 
-                <div class="h-6 w-px bg-black/10 dark:bg-white/10 mx-2"></div>
-                <div class="flex items-center gap-2 glass px-4 py-2 rounded-full border-black/10 dark:border-white/10">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span class="text-slate-600 dark:text-slate-300">Live Services</span>
-                </div>
-                <a href="{{ route('larai.auth.logout') }}" class="w-10 h-10 glass rounded-xl flex items-center justify-center hover:bg-red-500/10 transition-all text-slate-500 dark:text-slate-400 hover:text-red-500" title="Sign Out">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                </a>
-            </div>
+            <nav class="flex items-center gap-2">
+                <a href="{{ route('larai.dashboard') }}" class="border border-slate-300 bg-slate-900 px-3 py-2 text-sm text-white">Dashboard</a>
+                <a href="{{ route('larai.logs') }}" class="border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Logs</a>
+                <a href="{{ route('larai.settings') }}" class="border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Settings</a>
+                <a href="{{ route('larai.auth.logout') }}" class="border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Logout</a>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <main class="max-w-7xl mx-auto px-6 pb-20">
-        <!-- Dashboard Header -->
-        <header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 reveal relative z-10" id="header-reveal">
-            <div>
-                <h2 class="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest text-xs mb-2">Overview</h2>
-                <h1 class="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">AI Resource <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-purple-500 dark:from-brand-400 dark:to-purple-400">Hub</span></h1>
-            </div>
-            <div class="flex gap-3">
-                <div class="relative group z-[100]">
-                    <button class="glass px-5 py-2.5 rounded-xl border-black/10 dark:border-white/10 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center gap-2">
-                        <span>Export Data</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute right-0 mt-2 w-48 glass rounded-2xl border border-black/5 dark:border-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-                        <a href="{{ route('larai.export', 'json') }}" class="block px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">EXPORT AS JSON</a>
-                        <a href="{{ route('larai.export', 'csv') }}" class="block px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-t border-black/5 dark:border-white/5">EXPORT AS CSV</a>
-                        <a href="{{ route('larai.export', 'txt') }}" class="block px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-t border-black/5 dark:border-white/5">EXPORT AS TXT</a>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Dynamic Stats Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <!-- Total Cost Card -->
-            <div class="glass p-6 rounded-[2rem] relative overflow-hidden group hover:border-brand-500/30 transition-all duration-500 reveal" style="transition-delay: 100ms">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl group-hover:bg-brand-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-brand-500/10 rounded-2xl flex items-center justify-center text-brand-500 dark:text-brand-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-wider">Overall</span>
-                </div>
-                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Total Investment</h3>
-                <p class="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{{ $stats['currency_symbol'] }}{{ number_format($stats['total_cost'], 4) }}</p>
-                <div class="mt-4 flex items-center gap-2 text-xs text-slate-500">
-                    <span class="text-emerald-500 font-bold">↑ 12%</span>
-                    <span>vs last month</span>
-                </div>
-            </div>
-
-            <!-- Today's Cost -->
-            <div class="glass p-6 rounded-[2rem] relative overflow-hidden group hover:border-purple-500/30 transition-all duration-500 reveal" style="transition-delay: 200ms">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
-                    <span class="text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-1 rounded-lg uppercase tracking-wider">Today</span>
-                </div>
-                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Daily Burn Rate</h3>
-                <p class="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{{ $stats['currency_symbol'] }}{{ number_format($stats['today_cost'], 4) }}</p>
-                <div class="mt-4 flex items-center gap-2 text-xs text-brand-600 dark:text-brand-400">
-                    <span class="font-bold">Real-time</span>
-                    <span class="text-slate-500">updating automatically</span>
-                </div>
-            </div>
-
-            <!-- Tokens Used -->
-            <div class="glass p-6 rounded-[2rem] relative overflow-hidden group hover:border-blue-500/30 transition-all duration-500 reveal" style="transition-delay: 300ms">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                    </div>
-                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-1 rounded-lg uppercase tracking-wider">Computation</span>
-                </div>
-                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Total Tokens Parsed</h3>
-                <p class="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{{ number_format($stats['total_tokens']) }}</p>
-                <div class="mt-4 flex items-center gap-2 text-xs text-slate-500">
-                    <span class="text-blue-600 dark:text-blue-400 font-bold">~{{ number_format($stats['total_tokens'] / 0.75, 0) }}</span>
-                    <span>estimated words</span>
-                </div>
-            </div>
-
-            <!-- Active Models -->
-            <div class="glass p-6 rounded-[2rem] relative overflow-hidden group hover:border-pink-500/30 transition-all duration-500 reveal" style="transition-delay: 400ms">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl group-hover:bg-pink-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-600 dark:text-pink-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                    </div>
-                    <span class="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-500/10 px-2 py-1 rounded-lg uppercase tracking-wider">Models</span>
-                </div>
-                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Architecture Depth</h3>
-                <p class="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{{ $stats['costs_by_model']->count() }}</p>
-                <div class="mt-4 flex items-center gap-2 text-xs text-pink-600 dark:text-pink-400">
-                    <span class="font-bold">Scale</span>
-                    <span class="text-slate-500">multimodal environment</span>
-                </div>
-            </div>
+    <main class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="border border-slate-200 bg-white p-4">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Total Cost</p>
+                <p class="mt-2 text-2xl font-semibold tabular-nums">{{ $stats['currency_symbol'] }}{{ number_format($stats['total_cost'], 4) }}</p>
+            </article>
+            <article class="border border-slate-200 bg-white p-4">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Today Cost</p>
+                <p class="mt-2 text-2xl font-semibold tabular-nums">{{ $stats['currency_symbol'] }}{{ number_format($stats['today_cost'], 4) }}</p>
+            </article>
+            <article class="border border-slate-200 bg-white p-4">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Total Tokens</p>
+                <p class="mt-2 text-2xl font-semibold tabular-nums">{{ number_format($stats['total_tokens']) }}</p>
+            </article>
+            <article class="border border-slate-200 bg-white p-4">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Active Models</p>
+                <p class="mt-2 text-2xl font-semibold tabular-nums">{{ $stats['costs_by_model']->count() }}</p>
+            </article>
         </section>
 
-        <!-- Insights -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            <!-- Main Cost Chart -->
-            <div class="lg:col-span-2 glass rounded-[2.5rem] p-8 reveal" style="transition-delay: 500ms">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <article class="border border-slate-200 bg-white p-4 xl:col-span-2">
+                <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h3 class="text-xl font-bold">Cost Distribution</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Timeline of API investment across your stack</p>
+                        <h2 class="text-sm font-semibold">Cost Over Time</h2>
+                        <p class="text-xs text-slate-500">Selected date range</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                        <!-- Quick Select Buttons -->
-                        <div class="flex gap-1.5">
-                            <button onclick="setDateRange(7)" data-days="7" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
-                                7D
-                            </button>
-                            <button onclick="setDateRange(14)" data-days="14" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
-                                14D
-                            </button>
-                            <button onclick="setDateRange(30)" data-days="30" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
-                                30D
-                            </button>
-                            <button onclick="setDateRange(90)" data-days="90" class="date-range-btn glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-black/10 dark:border-white/10 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 transition-all">
-                                90D
-                            </button>
-                        </div>
-                        <!-- Date Range Picker -->
-                        <div class="relative">
-                            <div class="glass flex items-center gap-2 px-4 py-2 rounded-xl border-black/10 dark:border-white/10 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-all" id="dateRangeDisplay" onclick="document.getElementById('dateRangeInput').click()">
-                                <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <span id="dateRangeText" class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($stats['start_date'])->format('M d') }} — {{ \Carbon\Carbon::parse($stats['end_date'])->format('M d, Y') }}
-                                </span>
-                                <svg class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </div>
-                            <input type="text" id="dateRangeInput" class="absolute opacity-0 w-0 h-0 pointer-events-none" />
-                        </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="setDateRange(7)" class="date-range-btn border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100" data-days="7">7D</button>
+                        <button type="button" onclick="setDateRange(14)" class="date-range-btn border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100" data-days="14">14D</button>
+                        <button type="button" onclick="setDateRange(30)" class="date-range-btn border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100" data-days="30">30D</button>
+                        <button type="button" onclick="setDateRange(90)" class="date-range-btn border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100" data-days="90">90D</button>
+
+                        <input id="startDateInput" type="date" value="{{ $stats['start_date'] }}" class="border border-slate-300 bg-white px-2 py-1 text-xs">
+                        <input id="endDateInput" type="date" value="{{ $stats['end_date'] }}" class="border border-slate-300 bg-white px-2 py-1 text-xs">
+                        <button type="button" onclick="applyDateRange()" class="border border-slate-300 bg-slate-900 px-3 py-1 text-xs text-white">Apply</button>
                     </div>
                 </div>
-                <!-- Loading indicator -->
-                <div id="chartLoading" class="hidden absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[2.5rem] z-10 flex items-center justify-center">
-                    <div class="flex items-center gap-3 glass px-6 py-3 rounded-2xl">
-                        <svg class="animate-spin w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Updating charts...</span>
-                    </div>
-                </div>
-                <div class="h-[300px]">
+
+                <div class="h-72">
                     <canvas id="costChart"></canvas>
                 </div>
-            </div>
+            </article>
 
-            <!-- Model Usage -->
-            <div class="glass rounded-[2.5rem] p-8 reveal" style="transition-delay: 600ms">
-                 <h3 class="text-xl font-bold mb-8">Model Mix</h3>
-                 <div class="h-[250px] flex items-center justify-center relative">
+            <article class="border border-slate-200 bg-white p-4">
+                <h2 class="text-sm font-semibold">Cost by Model</h2>
+                <p class="mb-4 text-xs text-slate-500">Current range breakdown</p>
+
+                <div class="mx-auto h-56 max-w-56">
                     <canvas id="modelChart"></canvas>
-                 </div>
-                 <div class="mt-8 space-y-3" id="modelListContainer">
+                </div>
+
+                <div id="modelListContainer" class="mt-4 space-y-2">
                     @foreach($stats['costs_by_model'] as $model)
-                    <div class="flex items-center justify-between text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-lg">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full" style="background-color: {{ ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#a855f7', '#84cc16', '#f97316'][$loop->index % 10] }}"></span>
-                            <span class="font-mono text-slate-600 dark:text-slate-400">{{ $model->model }}</span>
+                        <div class="flex items-center justify-between border border-slate-200 bg-slate-50 px-2 py-1 text-xs">
+                            <span class="truncate font-mono text-slate-700">{{ $model->model }}</span>
+                            <span class="tabular-nums">{{ $stats['currency_symbol'] }}{{ number_format($model->cost, 4) }}</span>
                         </div>
-                        <span class="font-bold text-slate-900 dark:text-white">{{ $stats['currency_symbol'] }}{{ number_format($model->cost, 4) }}</span>
-                    </div>
                     @endforeach
-                 </div>
-            </div>
+                </div>
+            </article>
         </section>
 
-        <!-- Logs Table -->
-        <section class="reveal" style="transition-delay: 700ms">
-            <div class="glass rounded-[2.5rem] overflow-hidden">
-                <div class="px-8 py-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
-                    <h3 class="text-xl font-bold">Live Execution Stream</h3>
-                    <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                        Listening for events
-                    </div>
+        <section class="border border-slate-200 bg-white">
+            <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h2 class="text-sm font-semibold">Recent Logs</h2>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('larai.export', 'json') }}" class="border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100">JSON</a>
+                    <a href="{{ route('larai.export', 'csv') }}" class="border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100">CSV</a>
+                    <a href="{{ route('larai.export', 'txt') }}" class="border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100">TXT</a>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead>
-                            <tr class="bg-black/[0.02] dark:bg-white/[0.02]">
-                                <th class="px-8 py-4 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-tighter text-[10px]">Reference</th>
-                                <th class="px-8 py-4 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-tighter text-[10px]">Identity</th>
-                                <th class="px-8 py-4 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-tighter text-[10px]">Computation</th>
-                                <th class="px-8 py-4 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-tighter text-[10px]">Resource Burn</th>
-                                <th class="px-8 py-4 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-tighter text-[10px] text-right">Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
-                            @forelse($stats['recent_logs'] as $log)
-                            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                                <td class="px-8 py-5">
-                                    <div class="flex flex-col">
-                                        <span class="font-mono text-brand-600 dark:text-brand-400 font-bold">#{{ $log->id }}</span>
-                                        <span class="text-[10px] text-slate-500 font-medium tracking-tight">{{ strtoupper($log->provider) }} ENGINE</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-black/5 dark:bg-white/5 flex items-center justify-center font-bold text-xs text-slate-500 dark:text-slate-400 text-slate-400">
-                                            {{ substr($log->model, 0, 2) }}
-                                        </div>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $log->model }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <div class="flex flex-col">
-                                        <span class="text-slate-800 dark:text-slate-200 font-bold">{{ number_format($log->total_tokens) }} <span class="text-[10px] text-slate-500">TKNS</span></span>
-                                        <span class="text-[10px] text-slate-500 dark:text-slate-600">I:{{ number_format($log->prompt_tokens) }} / O:{{ number_format($log->completion_tokens) }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 tabular-nums">
-                                        ${{ number_format($log->cost_usd, 5) }}
-                                    </span>
-                                </td>
-                                <td class="px-8 py-5 text-right">
-                                    <span class="text-slate-500 text-xs font-medium">{{ $log->created_at->format('H:i:s') }}</span>
-                                    <span class="block text-[10px] text-slate-400 dark:text-slate-600">{{ $log->created_at->diffForHumans() }}</span>
-                                </td>
-                            </tr>
-                            @empty
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-4 py-3">ID</th>
+                            <th class="px-4 py-3">Provider</th>
+                            <th class="px-4 py-3">Model</th>
+                            <th class="px-4 py-3">Prompt</th>
+                            <th class="px-4 py-3">Completion</th>
+                            <th class="px-4 py-3">Total</th>
+                            <th class="px-4 py-3">Cost</th>
+                            <th class="px-4 py-3">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @forelse($stats['recent_logs'] as $log)
                             <tr>
-                                <td colspan="5" class="py-20 text-center text-slate-500 font-bold tracking-widest uppercase text-xs">No records detected in the current stream</td>
+                                <td class="px-4 py-3 font-mono text-xs">#{{ $log->id }}</td>
+                                <td class="px-4 py-3 text-xs uppercase">{{ $log->provider }}</td>
+                                <td class="px-4 py-3 text-xs">{{ $log->model }}</td>
+                                <td class="px-4 py-3 text-xs tabular-nums">{{ number_format($log->prompt_tokens) }}</td>
+                                <td class="px-4 py-3 text-xs tabular-nums">{{ number_format($log->completion_tokens) }}</td>
+                                <td class="px-4 py-3 text-xs tabular-nums">{{ number_format($log->total_tokens) }}</td>
+                                <td class="px-4 py-3 text-xs tabular-nums">{{ $stats['currency_symbol'] }}{{ number_format($log->cost_usd, 6) }}</td>
+                                <td class="px-4 py-3 text-xs text-slate-500">{{ $log->created_at->format('Y-m-d H:i:s') }}</td>
                             </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="p-6 bg-black/[0.01] dark:bg-white/[0.01] text-center border-t border-black/5 dark:border-white/5">
-                    <a href="{{ route('larai.logs') }}" class="text-brand-600 dark:text-brand-500 font-bold text-xs hover:text-brand-500 transition-colors">Load Full History Explorer →</a>
-                </div>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-4 py-10 text-center text-sm text-slate-500">No logs yet.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="border-t border-slate-200 px-4 py-3">
+                <a href="{{ route('larai.logs') }}" class="border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-100">Open full logs</a>
             </div>
         </section>
     </main>
 
-    <!-- Footer -->
-    <footer class="max-w-7xl mx-auto px-6 py-12 border-t border-black/5 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="text-slate-500 text-xs font-medium">
-            &copy; {{ date('Y') }} Gometap Group. Built for Laravel AI Ecosystem.
-        </div>
-        <div class="flex gap-6">
-             <a href="https://github.com/gometap/larai-tracker" class="text-slate-500 hover:text-brand-600 dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">Github</a>
-             <a href="https://github.com/gometap/larai-tracker/blob/main/CHANGELOG.md" class="text-slate-500 hover:text-brand-600 dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">Changelog</a>
-        </div>
-    </footer>
-
     <script>
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.theme = 'light';
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.theme = 'dark';
-            }
-            updateChartTheme();
-        }
-
-        // Reveal Animations
-        document.addEventListener('DOMContentLoaded', () => {
-            const reveals = document.querySelectorAll('.reveal');
-            reveals.forEach((el, i) => {
-                setTimeout(() => el.classList.add('active'), 100 * i);
-            });
-        });
-
-        let isDark = document.documentElement.classList.contains('dark');
-        let gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-        let textColor = isDark ? '#94a3b8' : '#64748b';
         const chartDataUrl = '{{ route("larai.chart-data") }}';
-        const modelColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#a855f7', '#84cc16', '#f97316'];
+        const modelColors = ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'];
 
-        // Track current date range
         let currentStartDate = '{{ $stats["start_date"] }}';
         let currentEndDate = '{{ $stats["end_date"] }}';
 
-        // Charts Configuration
-        function getChartOptions() {
-            const dark = document.documentElement.classList.contains('dark');
-            const grid = dark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-            const text = dark ? '#94a3b8' : '#64748b';
-            return {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: dark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                        titleColor: dark ? '#fff' : '#0f172a',
-                        bodyColor: '#3b82f6',
-                        borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                        borderWidth: 1,
-                        padding: 12,
-                        cornerRadius: 12
-                    }
-                },
-                scales: {
-                    y: {
-                        grid: { color: grid, drawBorder: false },
-                        ticks: { color: text, font: { size: 10, weight: '600' } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: text, font: { size: 10, weight: '600' } }
-                    }
-                }
-            };
-        }
-
-        const chartOptions = getChartOptions();
-
-        // Cost Over Time Chart
-        const costCtx = document.getElementById('costChart').getContext('2d');
-        function createCostGradient() {
-            const g = costCtx.createLinearGradient(0, 0, 0, 300);
-            g.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-            g.addColorStop(1, 'rgba(59, 130, 246, 0)');
-            return g;
-        }
-
-        let costChart = new Chart(costCtx, {
+        const costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
             type: 'line',
             data: {
                 labels: {!! json_encode($stats['costs_over_time']->pluck('date')) !!},
                 datasets: [{
-                    label: 'Invested',
+                    label: 'Cost',
                     data: {!! json_encode($stats['costs_over_time']->pluck('cost')) !!},
-                    borderColor: '#3b82f6',
-                    borderWidth: 3,
-                    pointBackgroundColor: isDark ? '#020617' : '#fff',
-                    pointBorderColor: '#3b82f6',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 6,
-                    backgroundColor: createCostGradient(),
-                    fill: true,
-                    tension: 0.4
-                }]
+                    borderColor: '#0f172a',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    fill: false,
+                    tension: 0.2,
+                }],
             },
-            options: chartOptions
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#e2e8f0' }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true } },
+                    y: { grid: { color: '#e2e8f0' }, ticks: { color: '#64748b' } },
+                },
+            },
         });
 
-        // Model Distribution Chart
-        const modelCtx = document.getElementById('modelChart').getContext('2d');
-        let modelChart = new Chart(modelCtx, {
+        const modelChart = new Chart(document.getElementById('modelChart').getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: {!! json_encode($stats['costs_by_model']->pluck('model')) !!},
                 datasets: [{
                     data: {!! json_encode($stats['costs_by_model']->pluck('cost')) !!},
                     backgroundColor: modelColors,
-                    hoverOffset: 20,
-                    borderWidth: 0,
-                    borderRadius: 4
-                }]
+                    borderWidth: 1,
+                    borderColor: '#ffffff',
+                }],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false }
-                }
-            }
+                plugins: { legend: { display: false } },
+                cutout: '70%',
+            },
         });
-
-        // Update charts when theme changes (no page reload)
-        function updateChartTheme() {
-            isDark = document.documentElement.classList.contains('dark');
-            gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-            textColor = isDark ? '#94a3b8' : '#64748b';
-
-            const newOptions = getChartOptions();
-
-            // Update cost chart
-            costChart.options = { ...costChart.options, ...newOptions };
-            costChart.data.datasets[0].pointBackgroundColor = isDark ? '#020617' : '#fff';
-            costChart.data.datasets[0].backgroundColor = createCostGradient();
-            costChart.update('none');
-
-            // Update model chart (doughnut has no scales)
-            modelChart.options.plugins = newOptions.plugins;
-            modelChart.update('none');
-        }
-
-        // Initialize Flatpickr
-        const fp = flatpickr('#dateRangeInput', {
-            mode: 'range',
-            dateFormat: 'Y-m-d',
-            maxDate: 'today',
-            defaultDate: [currentStartDate, currentEndDate],
-            showMonths: window.innerWidth >= 640 ? 2 : 1,
-            animate: true,
-            onChange: function(selectedDates) {
-                if (selectedDates.length === 2) {
-                    const start = selectedDates[0].toISOString().split('T')[0];
-                    const end = selectedDates[1].toISOString().split('T')[0];
-                    currentStartDate = start;
-                    currentEndDate = end;
-                    updateDateRangeText(start, end);
-                    highlightActiveDaysButton();
-                    fetchChartData(start, end);
-                }
-            }
-        });
-
-        // Highlight initial active button
-        highlightActiveDaysButton();
 
         function setDateRange(days) {
             const end = new Date();
@@ -618,98 +206,80 @@
             const startStr = start.toISOString().split('T')[0];
             const endStr = end.toISOString().split('T')[0];
 
-            currentStartDate = startStr;
-            currentEndDate = endStr;
+            document.getElementById('startDateInput').value = startStr;
+            document.getElementById('endDateInput').value = endStr;
 
-            fp.setDate([start, end], true);
-            updateDateRangeText(startStr, endStr);
-            highlightActiveDaysButton();
-            fetchChartData(startStr, endStr);
+            applyDateRange();
+            highlightActiveDaysButton(days);
         }
 
-        function highlightActiveDaysButton() {
-            const btns = document.querySelectorAll('.date-range-btn');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const start = new Date(currentStartDate);
-            start.setHours(0, 0, 0, 0);
-            const diffDays = Math.round((today - start) / (1000 * 60 * 60 * 24)) + 1;
-
-            btns.forEach(btn => {
-                const days = parseInt(btn.dataset.days);
-                if (days === diffDays) {
-                    btn.classList.add('active');
+        function highlightActiveDaysButton(days) {
+            document.querySelectorAll('.date-range-btn').forEach((btn) => {
+                if (parseInt(btn.dataset.days, 10) === days) {
+                    btn.classList.remove('bg-white', 'text-slate-900');
+                    btn.classList.add('bg-slate-900', 'text-white');
                 } else {
-                    btn.classList.remove('active');
+                    btn.classList.remove('bg-slate-900', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-900');
                 }
             });
         }
 
-        function updateDateRangeText(start, end) {
-            const startDate = new Date(start + 'T00:00:00');
-            const endDate = new Date(end + 'T00:00:00');
-            const opts = { month: 'short', day: 'numeric' };
-            const optsYear = { month: 'short', day: 'numeric', year: 'numeric' };
-            const el = document.getElementById('dateRangeText');
-            el.textContent = startDate.toLocaleDateString('en-US', opts) + ' — ' + endDate.toLocaleDateString('en-US', optsYear);
-        }
+        async function applyDateRange() {
+            currentStartDate = document.getElementById('startDateInput').value;
+            currentEndDate = document.getElementById('endDateInput').value;
 
-        async function fetchChartData(startDate, endDate) {
-            const loading = document.getElementById('chartLoading');
-            loading.classList.remove('hidden');
-            loading.classList.add('flex');
-
-            try {
-                const url = `${chartDataUrl}?start_date=${startDate}&end_date=${endDate}`;
-                const response = await fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                const data = await response.json();
-
-                // Update Cost Chart
-                costChart.data.labels = data.costs_over_time.map(item => item.date);
-                costChart.data.datasets[0].data = data.costs_over_time.map(item => item.cost);
-                costChart.update('active');
-
-                // Update Model Chart
-                modelChart.data.labels = data.costs_by_model.map(item => item.model);
-                modelChart.data.datasets[0].data = data.costs_by_model.map(item => item.cost);
-                modelChart.data.datasets[0].backgroundColor = modelColors.slice(0, data.costs_by_model.length);
-                modelChart.update('active');
-
-                // Update Model List in sidebar
-                updateModelList(data.costs_by_model, data.currency_symbol);
-
-            } catch (error) {
-                console.error('Failed to fetch chart data:', error);
-            } finally {
-                loading.classList.add('hidden');
-                loading.classList.remove('flex');
+            if (!currentStartDate || !currentEndDate) {
+                return;
             }
+
+            const query = new URLSearchParams({
+                start_date: currentStartDate,
+                end_date: currentEndDate,
+            });
+
+            const response = await fetch(`${chartDataUrl}?${query.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            costChart.data.labels = data.costs_over_time.map((item) => item.date);
+            costChart.data.datasets[0].data = data.costs_over_time.map((item) => item.cost);
+            costChart.update();
+
+            modelChart.data.labels = data.costs_by_model.map((item) => item.model);
+            modelChart.data.datasets[0].data = data.costs_by_model.map((item) => item.cost);
+            modelChart.data.datasets[0].backgroundColor = data.costs_by_model.map((_, index) => modelColors[index % modelColors.length]);
+            modelChart.update();
+
+            updateModelList(data.costs_by_model, data.currency_symbol);
         }
 
         function updateModelList(models, currencySymbol) {
             const container = document.getElementById('modelListContainer');
-            if (!container) return;
 
-            if (models.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">No data for selected range</p>';
+            if (!models.length) {
+                container.innerHTML = '<p class="text-xs text-slate-500">No model usage in selected range.</p>';
                 return;
             }
 
-            container.innerHTML = models.map((model, index) => `
-                <div class="flex items-center justify-between text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-lg">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full" style="background-color: ${modelColors[index % modelColors.length]}"></span>
-                        <span class="font-mono text-slate-600 dark:text-slate-400">${model.model}</span>
-                    </div>
-                    <span class="font-bold text-slate-900 dark:text-white">${currencySymbol}${parseFloat(model.cost).toFixed(4)}</span>
+            container.innerHTML = models.map((model) => `
+                <div class="flex items-center justify-between border border-slate-200 bg-slate-50 px-2 py-1 text-xs">
+                    <span class="truncate font-mono text-slate-700">${model.model}</span>
+                    <span class="tabular-nums">${currencySymbol}${parseFloat(model.cost).toFixed(4)}</span>
                 </div>
             `).join('');
         }
+
+        highlightActiveDaysButton(7);
     </script>
 </body>
 </html>

@@ -33,3 +33,27 @@ test('it calculates Gemini Flash cost correctly', function () {
     
     expect($cost)->toBe(0.375);
 });
+
+test('it maps dated openai models to base model pricing', function () {
+    $calculator = new LaraiCostCalculator();
+
+    $cost = $calculator->calculate('openai', 'gpt-4o-mini-2024-07-18', 969, 255);
+
+    expect($cost)->toBe(0.00029835);
+});
+
+test('it calculates gpt-4.1-nano costs with configured defaults', function () {
+    $calculator = new LaraiCostCalculator();
+
+    $cost = $calculator->calculate('openai', 'gpt-4.1-nano', 969, 255);
+
+    expect($cost)->toBe(0.0001989);
+});
+
+test('it returns zero for unknown model pricing', function () {
+    $calculator = new LaraiCostCalculator();
+
+    $cost = $calculator->calculate('openai', 'unknown-model', 969, 255);
+
+    expect($cost)->toBe(0.0);
+});

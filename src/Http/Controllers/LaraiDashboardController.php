@@ -3,9 +3,12 @@
 namespace Gometap\LaraiTracker\Http\Controllers;
 
 use Gometap\LaraiTracker\Models\LaraiLog;
+use Gometap\LaraiTracker\Models\LaraiModelPrice;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LaraiDashboardController extends Controller
 {
@@ -240,31 +243,95 @@ class LaraiDashboardController extends Controller
     }
 
     /**
-     * Sync prices from Gometap's central registry.
+     * Sync token prices from LiteLLM's model price registry.
      */
     public function syncPrices()
     {
-
         try {
-            $response = \Illuminate\Support\Facades\Http::get('https://raw.githubusercontent.com/gometap/larai-tracker/main/resources/data/prices.json');
-            
-            if ($response->successful()) {
-                $prices = $response->json();
-                foreach ($prices as $item) {
-                    \Gometap\LaraiTracker\Models\LaraiModelPrice::updateOrCreate(
-                        ['provider' => $item['provider'], 'model' => $item['model']],
-                        [
-                            'input_price_per_1m' => $item['input_price_per_1m'],
-                            'output_price_per_1m' => $item['output_price_per_1m'],
-                            'is_custom' => false,
-                        ]
-                    );
-                }
-                return redirect()->back()->with('success', 'Prices synchronized successfully.');
+            $response = Http::timeout(30)
+                ->acceptJson()
+                ->get('https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json');
+
+            if (!$response->successful() || !is_array($response->json())) {
+                return redirect()->back()->with('error', 'Failed to synchronize prices.');
             }
-        } catch (\Exception $e) {}
+
+            $prices = $this->extractTokenPricingRows($response->json());
+
+            if ($prices === []) {
+                return redirect()->back()->with('error', 'Failed to synchronize prices.');
+            }
+
+            foreach ($prices as $item) {
+                LaraiModelPrice::updateOrCreate(
+                    ['provider' => $item['provider'], 'model' => $item['model']],
+                    [
+                        'input_price_per_1m' => $item['input_price_per_1m'],
+                        'output_price_per_1m' => $item['output_price_per_1m'],
+                        'is_custom' => false,
+                    ]
+                );
+            }
+
+            return redirect()->back()->with('success', 'Prices synchronized successfully (' . count($prices) . ' models).');
+        } catch (\Throwable $e) {
+            Log::warning('Larai Tracker pricing sync failed: ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('error', 'Failed to synchronize prices.');
+    }
+
+    /**
+     * Convert LiteLLM pricing payload to Larai model price rows.
+     *
+     * @return array<int, array{provider: string, model: string, input_price_per_1m: float, output_price_per_1m: float}>
+     */
+    protected function extractTokenPricingRows(array $payload): array
+    {
+        $rows = [];
+
+        foreach ($payload as $model => $metadata) {
+            if (!is_string($model) || !is_array($metadata)) {
+                continue;
+            }
+
+            if ($model === 'sample_spec') {
+                continue;
+            }
+
+            $inputCostPerToken = (float) ($metadata['input_cost_per_token'] ?? 0);
+            $outputCostPerToken = (float) ($metadata['output_cost_per_token'] ?? 0);
+
+            if ($inputCostPerToken <= 0 && $outputCostPerToken <= 0) {
+                continue;
+            }
+
+            $provider = $this->normalizeLiteLlmProvider((string) ($metadata['litellm_provider'] ?? ''));
+
+            if ($provider === '') {
+                continue;
+            }
+
+            $rows[$provider . '|' . strtolower($model)] = [
+                'provider' => $provider,
+                'model' => strtolower($model),
+                'input_price_per_1m' => round($inputCostPerToken * 1000000, 6),
+                'output_price_per_1m' => round($outputCostPerToken * 1000000, 6),
+            ];
+        }
+
+        return array_values($rows);
+    }
+
+    protected function normalizeLiteLlmProvider(string $provider): string
+    {
+        $provider = strtolower(trim($provider));
+
+        return match ($provider) {
+            'bedrock_converse' => 'bedrock',
+            'google_ai_studio', 'vertex_ai' => 'google',
+            default => $provider,
+        };
     }
 
     /**

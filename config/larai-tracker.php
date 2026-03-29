@@ -28,4 +28,19 @@ return [
     */
 
     'session_lifetime' => 120,
+
+    /*
+    |--------------------------------------------------------------------------
+    | HTTP Client Tracking
+    |--------------------------------------------------------------------------
+    |
+    | Toggle interception of Illuminate HTTP client responses.
+    |
+    | When Laravel AI SDK is installed, this defaults to false so usage is
+    | tracked once per logical AI invocation through AI SDK events instead of
+    | once per underlying provider HTTP call.
+    |
+    */
+
+    'track_http_client' => env('LARAI_TRACKER_TRACK_HTTP_CLIENT', ! class_exists(\Laravel\Ai\Events\AgentPrompted::class)),
 ];

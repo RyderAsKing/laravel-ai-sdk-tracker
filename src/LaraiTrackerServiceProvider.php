@@ -19,7 +19,14 @@ class LaraiTrackerServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             $events = $this->app['events'];
             $events->listen(Events\AiCallRecorded::class, Listeners\LogAiCall::class);
-            $events->listen(\Illuminate\Http\Client\Events\ResponseReceived::class, Listeners\InterceptAiResponse::class);
+
+            if (class_exists(\Laravel\Ai\Events\AgentPrompted::class)) {
+                $events->listen(\Laravel\Ai\Events\AgentPrompted::class, Listeners\LogLaravelAiSdkCall::class);
+            }
+
+            if (config('larai-tracker.track_http_client', true)) {
+                $events->listen(\Illuminate\Http\Client\Events\ResponseReceived::class, Listeners\InterceptAiResponse::class);
+            }
         });
     }
 

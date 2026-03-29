@@ -30,6 +30,7 @@ Supports Laravel **10, 11, and 12**.
 - � **Singleton Authentication**: Secure password-protected dashboard (Config > ENV > DB).
 - �💰 **Cost Calculation**: Real-time USD cost estimation for GPT-4o, Gemini Flash, and more.
 - 🌐 **Multi-Provider Support**: Seamlessly tracks OpenAI, Azure, Gemini, and OpenRouter.
+- 🧠 **Laravel AI SDK Aware**: Tracks one row per logical `->prompt()` / `->stream()` invocation via AI SDK events.
 - ⚙️ **Dynamic Pricing**: Sync latest prices or manually override model costs from the UI.
 
 ## Installation
@@ -58,6 +59,14 @@ php artisan vendor:publish --tag="larai-tracker-config"
 ### 🕵️ Automatic Tracking
 
 Once installed, the package starts working immediately. Every time your application uses the Laravel `Http` facade to call an AI provider (OpenAI, Gemini, etc.), Larai Tracker intercepts the response, parses the token usage, and logs it to the database.
+
+When `laravel/ai` is installed, Larai Tracker listens to AI SDK events and tracks usage per logical invocation by default. This avoids fragmented rows for multi-step/tool calls.
+
+If you still want raw HTTP interception enabled, set:
+
+```ini
+LARAI_TRACKER_TRACK_HTTP_CLIENT=true
+```
 
 ### 📊 Accessing the Dashboard
 

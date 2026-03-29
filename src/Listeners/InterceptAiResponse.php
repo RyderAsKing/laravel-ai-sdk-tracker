@@ -38,8 +38,17 @@ class InterceptAiResponse
      */
     protected function logOpenAiFormat(string $url, array $response): void
     {
-        if (!isset($response['usage'])) {
+        if (!isset($response['usage']) || !is_array($response['usage'])) {
             return;
+        }
+
+        $usage = $response['usage'];
+
+        $promptTokens = (int) ($usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0);
+        $completionTokens = (int) ($usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0);
+
+        if ($promptTokens === 0 && $completionTokens === 0 && isset($usage['total_tokens'])) {
+            $promptTokens = (int) $usage['total_tokens'];
         }
 
         $provider = 'openai';
@@ -53,8 +62,8 @@ class InterceptAiResponse
             Auth::id(),
             $provider,
             $response['model'] ?? 'unknown',
-            $response['usage']['prompt_tokens'] ?? 0,
-            $response['usage']['completion_tokens'] ?? 0
+            $promptTokens,
+            $completionTokens
         );
     }
 

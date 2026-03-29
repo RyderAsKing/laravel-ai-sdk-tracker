@@ -1,47 +1,47 @@
 {
-    "name": "gometap/larai-tracker",
-    "description": "A standalone dashboard to track AI token usage and API costs for Laravel applications.",
-    "type": "library",
-    "license": "Apache-2.0",
-    "authors": [
-        {
-            "name": "danni",
-            "email": "contact@nguyendo.id.vn"
-        }
-    ],
-    "require": {
-        "php": "^8.2",
-        "illuminate/support": "^10.0|^11.0|^12.0"
-    },
-    "require-dev": {
-        "pestphp/pest": "^2.34|^3.0",
-        "orchestra/testbench": "^8.0|^9.0|^10.0",
-        "pestphp/pest-plugin-laravel": "^2.3|^3.0",
-        "guzzlehttp/guzzle": "^7.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "Gometap\\LaraiTracker\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Gometap\\LaraiTracker\\Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "test": "vendor/bin/pest"
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Gometap\\LaraiTracker\\LaraiTrackerServiceProvider"
-            ]
-        }
-    },
-    "config": {
-        "allow-plugins": {
-            "pestphp/pest-plugin": true
-        }
+  "name": "ryderasking/laravel-ai-sdk-tracker",
+  "description": "A standalone dashboard to track AI token usage and API costs for Laravel applications.",
+  "type": "library",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "danni",
+      "email": "contact@nguyendo.id.vn"
     }
+  ],
+  "require": {
+    "php": "^8.2",
+    "illuminate/support": "^10.0|^11.0|^12.0"
+  },
+  "require-dev": {
+    "pestphp/pest": "^2.34|^3.0",
+    "orchestra/testbench": "^8.0|^9.0|^10.0",
+    "pestphp/pest-plugin-laravel": "^2.3|^3.0",
+    "guzzlehttp/guzzle": "^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Gometap\\LaraiTracker\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Gometap\\LaraiTracker\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/pest"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Gometap\\LaraiTracker\\LaraiTrackerServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  }
 }
